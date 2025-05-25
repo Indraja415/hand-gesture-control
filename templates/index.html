@@ -1,88 +1,122 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hand Gesture Control</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1a1a1a;
+            color: white;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #video-stream {
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            margin-top: 20px;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .gesture-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .gesture-card {
+            background-color: #444;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00ffff;
+        }
+        h1 {
+            color: #00ffff;
+            margin-bottom: 10px;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <div class="status-indicator">
-        <span id="status">🟢 Live</span>
-    </div>
-
-    <div class="header">
-        <h1>Hand Gesture Control</h1>
-        <p>Control your media with simple hand gestures</p>
-    </div>
-
-    <div class="main-container">
-        <div class="video-container">
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <p>Loading camera...</p>
-            </div>
-            <img src="{{ url_for('video') }}" alt="Video Feed" class="video-feed" id="videoFeed">
+    <div class="container">
+        <h1>🤚 Hand Gesture Control</h1>
+        
+        <div class="status" id="status">
+            <p>Loading status...</p>
         </div>
-
-        <div class="controls-panel">
+        
+        <img id="video-stream" src="{{ url_for('video') }}" alt="Video Stream">
+        
+        <div class="controls">
             <h2>Gesture Controls</h2>
-            
-            <div class="gesture-item" style="animation-delay: 0.1s">
-                <div class="gesture-icon">✊</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Closed Fist (0 fingers)</div>
-                    <div class="gesture-action">Next Video (Shift + N)</div>
+            <div class="gesture-info">
+                <div class="gesture-card">
+                    <h3>👆 1 Finger</h3>
+                    <p>Play/Pause</p>
                 </div>
-            </div>
-
-            <div class="gesture-item" style="animation-delay: 0.2s">
-                <div class="gesture-icon">☝️</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Index Finger (1 finger)</div>
-                    <div class="gesture-action">Play/Pause (Space)</div>
+                <div class="gesture-card">
+                    <h3>✌️ 2 Fingers</h3>
+                    <p>Volume Up</p>
                 </div>
-            </div>
-
-            <div class="gesture-item" style="animation-delay: 0.3s">
-                <div class="gesture-icon">✌️</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Peace Sign (2 fingers)</div>
-                    <div class="gesture-action">Volume Up (↑)</div>
+                <div class="gesture-card">
+                    <h3>🤟 3 Fingers</h3>
+                    <p>Volume Down</p>
                 </div>
-            </div>
-
-            <div class="gesture-item" style="animation-delay: 0.4s">
-                <div class="gesture-icon">🤟</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Three Fingers (3 fingers)</div>
-                    <div class="gesture-action">Volume Down (↓)</div>
+                <div class="gesture-card">
+                    <h3>🖖 4 Fingers</h3>
+                    <p>Backward</p>
                 </div>
-            </div>
-
-            <div class="gesture-item" style="animation-delay: 0.5s">
-                <div class="gesture-icon">🤚</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Four Fingers (4 fingers)</div>
-                    <div class="gesture-action">Backward (←)</div>
+                <div class="gesture-card">
+                    <h3>🖐️ 5 Fingers</h3>
+                    <p>Forward</p>
                 </div>
-            </div>
-
-            <div class="gesture-item" style="animation-delay: 0.6s">
-                <div class="gesture-icon">🖐️</div>
-                <div class="gesture-info">
-                    <div class="gesture-name">Open Hand (5 fingers)</div>
-                    <div class="gesture-action">Forward (→)</div>
+                <div class="gesture-card">
+                    <h3>✊ Fist</h3>
+                    <p>Next Video</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="footer">
-        <p>Make sure your hand is clearly visible in the camera for best results</p>
-        <p>Actions have a 1.5-second cooldown to prevent spam</p>
-    </div>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Check status on page load
+        fetch('/status')
+            .then(response => response.json())
+            .then(data => {
+                const statusDiv = document.getElementById('status');
+                if (data.mode === 'web_deploy') {
+                    statusDiv.innerHTML = `
+                        <p><strong>📱 Demo Mode Active</strong></p>
+                        <p>Camera and gesture controls are disabled in web deployment.</p>
+                        <p>Download and run locally for full functionality!</p>
+                    `;
+                    statusDiv.style.backgroundColor = '#ff6b6b';
+                } else {
+                    statusDiv.innerHTML = `
+                        <p><strong>🖥️ Local Mode Active</strong></p>
+                        <p>Camera: ${data.camera_available ? '✅ Available' : '❌ Not Available'}</p>
+                        <p>Gesture Controls: ${data.pyautogui_available ? '✅ Enabled' : '❌ Disabled'}</p>
+                    `;
+                    statusDiv.style.backgroundColor = '#51cf66';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching status:', error);
+            });
+    </script>
 </body>
 </html>
