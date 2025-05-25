@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="status-indicator">
+        <span id="status">🟢 Live</span>
+    </div>
+
+    <div class="header">
+        <h1>Hand Gesture Control</h1>
+        <p>Control your media with simple hand gestures</p>
+    </div>
+
+    <div class="main-container">
+        <div class="video-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Loading camera...</p>
+            </div>
+            <img src="{{ url_for('video') }}" alt="Video Feed" class="video-feed" id="videoFeed">
+        </div>
+
+        <div class="controls-panel">
+            <h2>Gesture Controls</h2>
+            
+            <div class="gesture-item" style="animation-delay: 0.1s">
+                <div class="gesture-icon">✊</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Closed Fist (0 fingers)</div>
+                    <div class="gesture-action">Next Video (Shift + N)</div>
+                </div>
+            </div>
+
+            <div class="gesture-item" style="animation-delay: 0.2s">
+                <div class="gesture-icon">☝️</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Index Finger (1 finger)</div>
+                    <div class="gesture-action">Play/Pause (Space)</div>
+                </div>
+            </div>
+
+            <div class="gesture-item" style="animation-delay: 0.3s">
+                <div class="gesture-icon">✌️</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Peace Sign (2 fingers)</div>
+                    <div class="gesture-action">Volume Up (↑)</div>
+                </div>
+            </div>
+
+            <div class="gesture-item" style="animation-delay: 0.4s">
+                <div class="gesture-icon">🤟</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Three Fingers (3 fingers)</div>
+                    <div class="gesture-action">Volume Down (↓)</div>
+                </div>
+            </div>
+
+            <div class="gesture-item" style="animation-delay: 0.5s">
+                <div class="gesture-icon">🤚</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Four Fingers (4 fingers)</div>
+                    <div class="gesture-action">Backward (←)</div>
+                </div>
+            </div>
+
+            <div class="gesture-item" style="animation-delay: 0.6s">
+                <div class="gesture-icon">🖐️</div>
+                <div class="gesture-info">
+                    <div class="gesture-name">Open Hand (5 fingers)</div>
+                    <div class="gesture-action">Forward (→)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Make sure your hand is clearly visible in the camera for best results</p>
+        <p>Actions have a 1.5-second cooldown to prevent spam</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
