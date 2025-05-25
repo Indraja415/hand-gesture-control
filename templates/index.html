@@ -1,122 +1,460 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Hand Gesture Control</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Gesture Video Control</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #1a1a1a;
-            color: white;
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
-        }
-        #video-stream {
-            border: 2px solid #00ffff;
-            border-radius: 10px;
-            max-width: 100%;
-            height: auto;
-        }
-        .controls {
-            margin-top: 20px;
-            background-color: #333;
             padding: 20px;
-            border-radius: 10px;
         }
-        .gesture-info {
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        #video, #processedVideo {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .gesture-info {
             margin-top: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            text-align: center;
         }
-        .gesture-card {
-            background-color: #444;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #00ffff;
-        }
-        h1 {
-            color: #00ffff;
+
+        .gesture-display {
+            font-size: 1.5rem;
             margin-bottom: 10px;
         }
+
+        .action-display {
+            font-size: 1.2rem;
+            color: #64ffda;
+            font-weight: bold;
+        }
+
+        .controls {
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .status {
-            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+        }
+
+        .status.warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            color: #333;
+        }
+
+        .gesture-guide {
+            margin-top: 20px;
+        }
+
+        .gesture-guide h3 {
+            margin-bottom: 15px;
+            color: #64ffda;
+        }
+
+        .gesture-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             padding: 10px;
-            background-color: #444;
-            border-radius: 5px;
+            margin: 5px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .gesture-count {
+            font-weight: bold;
+            color: #64ffda;
+        }
+
+        .demo-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .demo-link a {
+            color: #64ffda;
+            text-decoration: none;
+            font-size: 1.1rem;
+            padding: 10px 20px;
+            border: 2px solid #64ffda;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .demo-link a:hover {
+            background: #64ffda;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🤚 Hand Gesture Control</h1>
-        
-        <div class="status" id="status">
-            <p>Loading status...</p>
+        <div class="header">
+            <h1>🖐️ Hand Gesture Video Control</h1>
+            <p>Control your videos using intuitive hand gestures</p>
         </div>
-        
-        <img id="video-stream" src="{{ url_for('video') }}" alt="Video Stream">
-        
-        <div class="controls">
-            <h2>Gesture Controls</h2>
-            <div class="gesture-info">
-                <div class="gesture-card">
-                    <h3>👆 1 Finger</h3>
-                    <p>Play/Pause</p>
+
+        <div class="main-content">
+            <div class="video-section">
+                <div class="video-container">
+                    <video id="video" autoplay muted playsinline style="display: none;"></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                    <img id="processedVideo" alt="Processed video feed" style="display: none;">
                 </div>
-                <div class="gesture-card">
-                    <h3>✌️ 2 Fingers</h3>
-                    <p>Volume Up</p>
+                
+                <div class="controls">
+                    <button id="startBtn" class="btn">Start Camera</button>
+                    <button id="stopBtn" class="btn" disabled>Stop Camera</button>
                 </div>
-                <div class="gesture-card">
-                    <h3>🤟 3 Fingers</h3>
-                    <p>Volume Down</p>
+
+                <div id="status" class="status warning">
+                    Click "Start Camera" to begin gesture recognition
                 </div>
-                <div class="gesture-card">
-                    <h3>🖖 4 Fingers</h3>
-                    <p>Backward</p>
-                </div>
-                <div class="gesture-card">
-                    <h3>🖐️ 5 Fingers</h3>
-                    <p>Forward</p>
-                </div>
-                <div class="gesture-card">
-                    <h3>✊ Fist</h3>
-                    <p>Next Video</p>
+
+                <div class="gesture-info">
+                    <div class="gesture-display">
+                        Fingers: <span id="fingerCount">0</span> | 
+                        Gesture: <span id="thumbGesture">None</span>
+                    </div>
+                    <div class="action-display" id="currentAction">
+                        No action detected
+                    </div>
                 </div>
             </div>
+
+            <div class="controls-section">
+                <h3>Gesture Guide</h3>
+                <div class="gesture-guide">
+                    <div class="gesture-item">
+                        <span><span class="gesture-count">1</span> finger</span>
+                        <span>Play/Pause</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span><span class="gesture-count">2</span> fingers</span>
+                        <span>Volume Up</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span><span class="gesture-count">3</span> fingers</span>
+                        <span>Volume Down</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span><span class="gesture-count">4</span> fingers</span>
+                        <span>Seek Forward</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span><span class="gesture-count">5</span> fingers</span>
+                        <span>Seek Backward</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span>👍 <span class="gesture-count">Thumb Up</span></span>
+                        <span>Next Video</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span>👎 <span class="gesture-count">Thumb Down</span></span>
+                        <span>Previous Video</span>
+                    </div>
+                    <div class="gesture-item">
+                        <span>✊ <span class="gesture-count">Fist</span></span>
+                        <span>Stop</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 30px;">
+                    <h4>Instructions:</h4>
+                    <ul style="margin-top: 10px; padding-left: 20px;">
+                        <li>Position your hand clearly in the camera view</li>
+                        <li>Ensure good lighting conditions</li>
+                        <li>Hold gestures steady for recognition</li>
+                        <li>Keep hand at a reasonable distance from camera</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-link">
+            <a href="/demo">Try Interactive Demo</a>
         </div>
     </div>
 
     <script>
-        // Check status on page load
-        fetch('/status')
-            .then(response => response.json())
-            .then(data => {
-                const statusDiv = document.getElementById('status');
-                if (data.mode === 'web_deploy') {
-                    statusDiv.innerHTML = `
-                        <p><strong>📱 Demo Mode Active</strong></p>
-                        <p>Camera and gesture controls are disabled in web deployment.</p>
-                        <p>Download and run locally for full functionality!</p>
-                    `;
-                    statusDiv.style.backgroundColor = '#ff6b6b';
-                } else {
-                    statusDiv.innerHTML = `
-                        <p><strong>🖥️ Local Mode Active</strong></p>
-                        <p>Camera: ${data.camera_available ? '✅ Available' : '❌ Not Available'}</p>
-                        <p>Gesture Controls: ${data.pyautogui_available ? '✅ Enabled' : '❌ Disabled'}</p>
-                    `;
-                    statusDiv.style.backgroundColor = '#51cf66';
+        const socket = io();
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const processedVideo = document.getElementById('processedVideo');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const status = document.getElementById('status');
+        const fingerCount = document.getElementById('fingerCount');
+        const thumbGesture = document.getElementById('thumbGesture');
+        const currentAction = document.getElementById('currentAction');
+
+        let stream = null;
+        let isProcessing = false;
+        let animationId = null;
+
+        startBtn.addEventListener('click', startCamera);
+        stopBtn.addEventListener('click', stopCamera);
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                
+                video.onloadedmetadata = () => {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                    status.className = 'status success';
+                    status.innerHTML = '✅ Camera started successfully';
+                    startProcessing();
+                };
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                status.className = 'status error';
+                status.innerHTML = '❌ Error accessing camera: ' + err.message;
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            video.style.display = 'none';
+            processedVideo.style.display = 'none';
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.className = 'status warning';
+            status.innerHTML = 'Camera stopped';
+            isProcessing = false;
+            
+            // Reset gesture display
+            fingerCount.textContent = '0';
+            thumbGesture.textContent = 'None';
+            currentAction.textContent = 'No action detected';
+        }
+
+        function startProcessing() {
+            isProcessing = true;
+            processFrame();
+        }
+
+        function processFrame() {
+            if (!isProcessing || !video.videoWidth || !video.videoHeight) {
+                animationId = requestAnimationFrame(processFrame);
+                return;
+            }
+
+            // Draw video frame to canvas
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            // Convert canvas to base64 and send to server
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        socket.emit('video_frame', { image: e.target.result });
+                    };
+                    reader.readAsDataURL(blob);
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching status:', error);
-            });
+            }, 'image/jpeg', 0.8);
+
+            animationId = requestAnimationFrame(processFrame);
+        }
+
+        // Socket event handlers
+        socket.on('processed_frame', function(data) {
+            if (data.image) {
+                processedVideo.src = data.image;
+                processedVideo.style.display = 'block';
+                video.style.display = 'none';
+            }
+            
+            if (data.gesture) {
+                fingerCount.textContent = data.gesture.fingers;
+                thumbGesture.textContent = data.gesture.thumb_gesture;
+                currentAction.textContent = data.gesture.description;
+                
+                // Update status based on gesture detection
+                if (data.gesture.action !== 'none') {
+                    status.className = 'status success';
+                    status.innerHTML = `🎯 Gesture detected: ${data.gesture.description}`;
+                }
+            }
+        });
+
+        socket.on('error', function(data) {
+            console.error('Server error:', data.message);
+            status.className = 'status error';
+            status.innerHTML = '❌ Processing error: ' + data.message;
+        });
+
+        socket.on('connect', function() {
+            console.log('Connected to server');
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Disconnected from server');
+            status.className = 'status warning';
+            status.innerHTML = '⚠️ Disconnected from server';
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopCamera();
+        });
     </script>
 </body>
 </html>
