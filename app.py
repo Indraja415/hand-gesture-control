@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+app.run(host='0.0.0.0', port=5000, debug=True)
 
 class GestureRecognizer:
     def __init__(self):
